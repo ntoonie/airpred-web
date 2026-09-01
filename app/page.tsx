@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   BarChart2,
   CheckCircle2,
@@ -39,6 +39,104 @@ const forecastData = [
 ];
 
 export default function AirPredPage() {
+  // State to toggle between the main dashboard and the "How It Works" view
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
+
+  // ===== "HOW IT WORKS" VIEW =====
+  if (showHowItWorks) {
+    return (
+      <div className="min-h-screen bg-white font-sans text-slate-900 p-8">
+        <div className="max-w-5xl mx-auto">
+          {/* Top Navigation */}
+          <div className="flex items-center justify-between mb-12 relative">
+            {/* Empty div to balance flexbox */}
+            <div className="w-24"></div> 
+            
+            <span className="text-blue-600 font-bold tracking-widest text-sm uppercase">
+              How It Works
+            </span>
+            
+            <button 
+              onClick={() => setShowHowItWorks(false)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-8 rounded-md transition-colors"
+            >
+              Home
+            </button>
+          </div>
+
+          {/* Header Content */}
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">
+            About the AIRPRED Model
+          </h1>
+          <p className="text-lg text-gray-600 mb-12 leading-relaxed">
+            AIRPRED uses a direct multi-step forecasting architecture trained on historical station data, meteorological inputs, and satellite-derived aerosol observations to produce 24-hour PM2.5 predictions for Philippine urban areas.
+          </p>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <div className="bg-[#f0f4ff] rounded-xl py-10 px-6 text-center border border-blue-50">
+              <div className="text-blue-600 text-5xl font-bold mb-2">24h</div>
+              <div className="text-slate-500 font-medium">Forecast window</div>
+            </div>
+            
+            <div className="bg-[#f0fdf4] rounded-xl py-10 px-6 text-center border border-green-50">
+              <div className="text-green-500 text-5xl font-bold mb-2">10</div>
+              <div className="text-slate-500 font-medium">Urban stations</div>
+            </div>
+            
+            <div className="bg-[#fffdf0] rounded-xl py-10 px-6 text-center border border-yellow-50">
+              <div className="text-orange-500 text-5xl font-bold mb-2">Hourly</div>
+              <div className="text-slate-500 font-medium">Update frequency</div>
+            </div>
+          </div>
+
+          {/* Numbered Steps */}
+          <div className="space-y-10 max-w-4xl">
+            {/* Step 1 */}
+            <div className="flex gap-6 items-start">
+              <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0 mt-1">
+                1
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Feature extraction</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Meteorological drivers and lagged PM2.5 values are normalized and encoded into a fixed-length input tensor covering a 48-hour lookback window.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="flex gap-6 items-start">
+              <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0 mt-1">
+                2
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Direct multi-step output</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  The model produces all 24 hourly PM2.5 predictions simultaneously — avoiding error accumulation that plagues recursive single-step approaches.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="flex gap-6 items-start">
+              <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0 mt-1">
+                3
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Post-processing & thresholds</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Raw predictions are bias-corrected and mapped against Philippine NAAQS (25 µg/m³) and WHO (15 µg/m³) guidelines for health-contextualized output.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== MAIN DASHBOARD VIEW =====
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-slate-900">
       {/* ===== NAVIGATION ===== */}
@@ -52,8 +150,8 @@ export default function AirPredPage() {
       <section
         className="relative h-[600px] flex flex-col items-center justify-center text-center px-4"
         style={{
-          // Using a placeholder street image with a dark overlay to match the vibe
-          backgroundImage: `linear-gradient(rgba(17, 24, 39, 0.65), rgba(17, 24, 39, 0.65)), url('https://images.unsplash.com/photo-1518526157563-b1ee37a05129?auto=format&fit=crop&q=80&w=2000')`,
+          // Remember to ensure image_c48b35.jpg is in your /public folder!
+          backgroundImage: `linear-gradient(rgba(17, 24, 39, 0.65), rgba(17, 24, 39, 0.65)), url('/image_c48b35.jpg')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -66,7 +164,12 @@ export default function AirPredPage() {
           <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-md transition-colors">
             Explore Live Dashboard
           </button>
-          <button className="bg-white hover:bg-gray-100 text-gray-900 font-medium py-3 px-8 rounded-md transition-colors">
+          
+          {/* UPDATED: Added onClick handler to trigger the state change */}
+          <button 
+            onClick={() => setShowHowItWorks(true)}
+            className="bg-white hover:bg-gray-100 text-gray-900 font-medium py-3 px-8 rounded-md transition-colors"
+          >
             Learn How It Works
           </button>
         </div>
@@ -330,7 +433,7 @@ export default function AirPredPage() {
             <h4 className="text-white font-semibold mb-4">Links</h4>
             <ul className="space-y-2">
               <li><a href="#" className="hover:text-white transition-colors">Home</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">About the Model</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setShowHowItWorks(true); }} className="hover:text-white transition-colors">About the Model</a></li>
               <li><a href="#" className="hover:text-white transition-colors">Data Methodology</a></li>
             </ul>
           </div>
