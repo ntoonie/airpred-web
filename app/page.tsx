@@ -1,0 +1,353 @@
+"use client";
+
+import React from "react";
+import {
+  BarChart2,
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  Calendar,
+  ChevronDown,
+  Smile,
+} from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  ReferenceLine,
+} from "recharts";
+
+// Mock data for the chart based on the image
+const forecastData = [
+  { hour: "Now", pm25: 17 },
+  { hour: "", pm25: 21 },
+  { hour: "", pm25: 24.5 },
+  { hour: "", pm25: 29 },
+  { hour: "6", pm25: 34 },
+  { hour: "", pm25: 38 },
+  { hour: "", pm25: 35 },
+  { hour: "12", pm25: 31 },
+  { hour: "", pm25: 35 },
+  { hour: "", pm25: 30 },
+  { hour: "18", pm25: 24.5 },
+  { hour: "", pm25: 20 },
+  { hour: "", pm25: 16.5 },
+  { hour: "24", pm25: 14.5 },
+];
+
+export default function AirPredPage() {
+  return (
+    <div className="min-h-screen bg-gray-50 font-sans text-slate-900">
+      {/* ===== NAVIGATION ===== */}
+      <nav className="bg-white px-8 py-4 shadow-sm flex items-center justify-between sticky top-0 z-50">
+        <div className="text-blue-600 font-bold text-xl tracking-wider">
+          AIRPRED
+        </div>
+      </nav>
+
+      {/* ===== HERO SECTION ===== */}
+      <section
+        className="relative h-[600px] flex flex-col items-center justify-center text-center px-4"
+        style={{
+          // Using a placeholder street image with a dark overlay to match the vibe
+          backgroundImage: `linear-gradient(rgba(17, 24, 39, 0.65), rgba(17, 24, 39, 0.65)), url('https://images.unsplash.com/photo-1518526157563-b1ee37a05129?auto=format&fit=crop&q=80&w=2000')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+          Breathe Easier with <br /> Predictive Intelligence
+        </h1>
+        
+        <div className="flex flex-col sm:flex-row gap-4 mt-8">
+          <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-md transition-colors">
+            Explore Live Dashboard
+          </button>
+          <button className="bg-white hover:bg-gray-100 text-gray-900 font-medium py-3 px-8 rounded-md transition-colors">
+            Learn How It Works
+          </button>
+        </div>
+
+        {/* Floating Badge */}
+        <div className="absolute bottom-6 right-6 bg-white rounded-full py-2 px-4 flex items-center gap-2 shadow-lg">
+          <div className="w-2.5 h-2.5 bg-blue-600 rounded-full"></div>
+          <span className="text-blue-600 text-sm font-semibold">
+            Live for Philippine Urban Areas
+          </span>
+        </div>
+      </section>
+
+      {/* ===== FEATURES SECTION ===== */}
+      <section className="bg-[#111827] text-white py-16 px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">
+              Powered by Advanced Analytics
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto text-sm">
+              Our model continuously processes meteorological and environmental data
+              to bring you highly accurate 24-hour predictive windows.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Feature 1 */}
+            <div className="bg-[#1f2937] p-6 rounded-xl border border-gray-800">
+              <div className="bg-blue-900/30 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <BarChart2 className="text-blue-500" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">24-Hour Precision</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Anticipate air quality drops before they happen with our rolling
+                24-hour PM2.5 forecasting curve.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="bg-[#1f2937] p-6 rounded-xl border border-gray-800">
+              <div className="bg-green-900/30 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <CheckCircle2 className="text-green-500" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Health Guidelines</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Forecasts mapped against Philippine NAAQS and WHO guidelines to
+                give actionable health context.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="bg-[#1f2937] p-6 rounded-xl border border-gray-800">
+              <div className="bg-orange-900/30 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <AlertTriangle className="text-orange-500" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Vulnerable Group Alerts</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Clear, color-coded AQI warnings ensure sensitive groups know when
+                to limit outdoor activities.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== DASHBOARD SECTION ===== */}
+      <section className="py-16 px-4 md:px-8 max-w-7xl mx-auto">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl font-bold text-slate-800 tracking-wide mb-2">
+            AIRPRED
+          </h2>
+          <p className="text-gray-500">
+            PM2.5 Forecast for Philippine Urban Areas
+          </p>
+        </div>
+
+        {/* Dashboard Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+            <span className="text-gray-400 text-sm">Select City:</span>
+            <ChevronDown className="text-gray-400 w-4 h-4" />
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3">
+            <Clock className="text-blue-500 w-5 h-5" />
+            <div>
+              <p className="text-xs text-gray-400">Forecast generated:</p>
+              <p className="text-sm font-medium">May 9, 2026 at 8:00 AM (PHT)</p>
+            </div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3">
+            <Calendar className="text-blue-500 w-5 h-5" />
+            <div>
+              <p className="text-xs text-gray-400">24-hour window:</p>
+              <p className="text-sm font-medium">
+                May 9, 8:00 AM &rarr; May 10, 8:00 AM
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Dashboard Area */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Chart Section */}
+          <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col">
+            <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+              <h3 className="font-bold text-gray-800 mb-4 sm:mb-0">
+                PM2.5 Forecast (Next 24 Hours)
+              </h3>
+              
+              {/* Custom Legend */}
+              <div className="flex gap-4 text-xs font-medium text-gray-600">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-0.5 bg-blue-500"></div>
+                  <span>24-hr Forecast</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-0.5 border-b border-dashed border-red-400"></div>
+                  <span>PH NAAQS (25 µg/m³)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-0.5 border-b border-dashed border-green-500"></div>
+                  <span>WHO Guideline (15 µg/m³)</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 w-full h-[300px] min-h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={forecastData}
+                  margin={{ top: 20, right: 10, left: -20, bottom: 10 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis
+                    dataKey="hour"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: "#888" }}
+                    dy={10}
+                  />
+                  <YAxis
+                    domain={[0, 50]}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: "#888" }}
+                    ticks={[0, 10, 20, 30, 40, 50]}
+                    label={{ value: "PM2.5 (µg/m³)", angle: -90, position: "insideLeft", offset: 20, style: { fontSize: '12px', fill: '#888' } }}
+                  />
+                  <ReferenceLine y={25} stroke="#f87171" strokeDasharray="4 4" />
+                  <ReferenceLine y={15} stroke="#22c55e" strokeDasharray="4 4" />
+                  <Line
+                    type="monotone"
+                    dataKey="pm25"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: "#3b82f6", strokeWidth: 0 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="text-center text-xs text-gray-400 mt-2">Hours</div>
+            </div>
+
+            <div className="mt-8 border-t border-gray-100 pt-4">
+              <p className="text-xs text-gray-500 font-medium">Forecast generated: May 9, 2026 at 8:00 AM (PHT)</p>
+              <p className="text-xs text-gray-500 font-medium">24-hour window: May 9, 2026 8:00 AM &rarr; May 10, 2026 8:00 AM</p>
+            </div>
+          </div>
+
+          {/* Side Status Panel */}
+          <div className="bg-[#fffdf2] border border-orange-100 rounded-xl p-6 shadow-sm flex flex-col">
+            <div className="text-center mb-6">
+              <p className="text-sm text-gray-600 mb-6">Manila — Next 24 Hours</p>
+              <div className="flex flex-col items-center justify-center">
+                <div className="bg-yellow-400 text-white rounded-full p-2 mb-3">
+                   <Smile className="w-12 h-12" />
+                </div>
+                <h2 className="text-2xl font-bold text-yellow-500 tracking-wide mb-3">
+                  MODERATE
+                </h2>
+                <div className="bg-yellow-200/50 text-yellow-700 text-sm font-semibold py-1 px-4 rounded-full">
+                  Peak: 28.4 µg/m³
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 rounded p-3 mb-6 flex items-start gap-2 shadow-sm">
+              <AlertTriangle className="w-4 h-4 text-gray-600 shrink-0 mt-0.5" />
+              <p className="text-xs text-gray-600">
+                Sensitive groups should limit outdoor activity.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-sm text-gray-800 mb-4">
+                AQI Legend (PM2.5 µg/m³)
+              </h4>
+              <ul className="text-xs space-y-3">
+                <li className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                    <span className="text-gray-600">Good</span>
+                  </div>
+                  <span className="text-gray-500">0 - 12</span>
+                </li>
+                <li className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+                    <span className="text-gray-600">Moderate</span>
+                  </div>
+                  <span className="text-gray-500">12.1 - 35.4</span>
+                </li>
+                <li className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-orange-400"></span>
+                    <span className="text-gray-600">Unhealthy for Sensitive Groups</span>
+                  </div>
+                  <span className="text-gray-500">35.5 - 55.4</span>
+                </li>
+                <li className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                    <span className="text-gray-600">Unhealthy</span>
+                  </div>
+                  <span className="text-gray-500">55.5 - 150.4</span>
+                </li>
+                <li className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                    <span className="text-gray-600">Very Unhealthy</span>
+                  </div>
+                  <span className="text-gray-500">150.5 - 250.4</span>
+                </li>
+                <li className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-900"></span>
+                    <span className="text-gray-600">Hazardous</span>
+                  </div>
+                  <span className="text-gray-500">250.5+</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FOOTER ===== */}
+      <footer className="bg-[#111827] text-gray-400 py-12 px-8 text-sm">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+          <div className="md:col-span-2">
+            <div className="text-white font-bold text-lg mb-2 tracking-wider">
+              AIRPRED
+            </div>
+            <p className="max-w-xs">
+              Dedicated to providing accurate, accessible air quality forecasts
+              for healthier urban living in the Philippines.
+            </p>
+          </div>
+          <div>
+            <h4 className="text-white font-semibold mb-4">Links</h4>
+            <ul className="space-y-2">
+              <li><a href="#" className="hover:text-white transition-colors">Home</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">About the Model</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Data Methodology</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-semibold mb-4">Legal</h4>
+            <ul className="space-y-2">
+              <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Disclaimer</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto pt-8 border-t border-gray-800 flex flex-col sm:flex-row justify-between text-xs">
+          <p>© 2026 AIRPRED. All rights reserved.</p>
+          <p>Data models provided for informational purposes.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
