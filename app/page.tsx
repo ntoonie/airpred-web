@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   Clock,
   Calendar,
-  ChevronDown,
   Smile,
 } from "lucide-react";
 import {
@@ -38,9 +37,23 @@ const forecastData = [
   { hour: "24", pm25: 14.5 },
 ];
 
+const cities = [
+  "Manila",
+  "Quezon City",
+  "Caloocan",
+  "Valenzuela",
+  "Pasig",
+  "Makati",
+  "Mandaluyong City",
+  "Navotas City",
+  "Pasay City",
+  "San Juan City",
+];
+
 export default function AirPredPage() {
   // State to toggle between the main dashboard and the "How It Works" view
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [selectedCity, setSelectedCity] = useState(cities[0]);
 
   // ===== "HOW IT WORKS" VIEW =====
   if (showHowItWorks) {
@@ -249,9 +262,22 @@ export default function AirPredPage() {
 
         {/* Dashboard Controls */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between">
-            <span className="text-gray-400 text-sm">Select City:</span>
-            <ChevronDown className="text-gray-400 w-4 h-4" />
+          <div className="bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3">
+            <label htmlFor="city-select" className="text-gray-400 text-sm whitespace-nowrap">
+              Select City:
+            </label>
+            <select
+              id="city-select"
+              value={selectedCity}
+              onChange={(event) => setSelectedCity(event.target.value)}
+              className="min-w-0 flex-1 bg-transparent text-sm font-medium text-slate-800 outline-none cursor-pointer"
+            >
+              {cities.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3">
             <Clock className="text-blue-500 w-5 h-5" />
