@@ -50,6 +50,67 @@ const cities = [
   "San Juan City",
 ];
 
+const modelVariants = [
+  "Variant A - Single-branch TCN with Unified Encoding and Concatenation Fusion (Multimodal input)",
+  "Variant B - Dual-branch TCN with Concatenation Fusion (Multimodal input)",
+  "Variant C - AIRPRED: Dual-branch TCN with Cross-Modal Attention Fusion (Multimodal input)",
+  "Variant D - Single-branch TCN with PM2.5-only input",
+];
+
+const variantForecastData = {
+  [modelVariants[0]]: forecastData,
+  [modelVariants[1]]: forecastData.map((point, index) => ({
+    ...point,
+    pm25: point.pm25 + [0, 1, -1, 1.5, 2, 1, -1.5, 1, 0.5, -1, 1, 0, -0.5, 1][index],
+  })),
+  [modelVariants[2]]: forecastData.map((point, index) => ({
+    ...point,
+    pm25: point.pm25 + [0, -1, 0.5, -1, -1.5, 0, 1, -1, -1.5, 0.5, -1, 0, 0.5, -1][index],
+  })),
+  [modelVariants[3]]: forecastData.map((point, index) => ({
+    ...point,
+    pm25: point.pm25 + [0, 2, 1, 2.5, 3, 2, 1.5, 2, 2.5, 1, 2, 1.5, 1, 2][index],
+  })),
+};
+
+function ForecastChart({ data }: { data: typeof forecastData }) {
+  return (
+    <div className="h-[300px] min-h-[300px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 20, right: 10, left: 10, bottom: 10 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+          <XAxis
+            dataKey="hour"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: "#888" }}
+            dy={10}
+          />
+          <YAxis
+            domain={[0, 50]}
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: "#888" }}
+            ticks={[0, 10, 20, 30, 40, 50]}
+            label={{ value: "PM2.5 (µg/m³)", angle: -90, position: "insideLeft", offset: 20, style: { fontSize: "12px", fill: "#888" } }}
+          />
+          <ReferenceLine y={25} stroke="#f87171" strokeDasharray="4 4" />
+          <ReferenceLine y={15} stroke="#22c55e" strokeDasharray="4 4" />
+          <Line
+            type="monotone"
+            dataKey="pm25"
+            stroke="#3b82f6"
+            strokeWidth={2}
+            dot={{ r: 4, fill: "#3b82f6", strokeWidth: 0 }}
+            activeDot={{ r: 6 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+      <div className="mt-2 text-center text-xs text-gray-400">Hours</div>
+    </div>
+  );
+}
+
 export default function AirPredPage() {
   // State to toggle between the main dashboard and the "How It Works" view
   const [showHowItWorks, setShowHowItWorks] = useState(false);
@@ -298,92 +359,61 @@ export default function AirPredPage() {
         </div>
 
         {/* Main Dashboard Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
           {/* Chart Section */}
-          <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col">
-            <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-              <h3 className="font-bold text-gray-800 mb-4 sm:mb-0">
-                PM2.5 Forecast (Next 24 Hours)
-              </h3>
-              
-              {/* Custom Legend */}
-              <div className="flex gap-4 text-xs font-medium text-gray-600">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-0.5 bg-blue-500"></div>
-                  <span>24-hr Forecast</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-0.5 border-b border-dashed border-red-400"></div>
-                  <span>PH NAAQS (25 µg/m³)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-0.5 border-b border-dashed border-green-500"></div>
-                  <span>WHO Guideline (15 µg/m³)</span>
-                </div>
-              </div>
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col lg:col-span-3">
+            <div className="mb-6">
+              <h3 className="font-bold text-gray-800">Model Comparison</h3>
+              <p className="mt-1 text-xs text-gray-500">
+                Compare the next 24-hour PM2.5 forecast from all four model variants.
+              </p>
             </div>
 
-            <div className="flex-1 w-full h-[300px] min-h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={forecastData}
-                  margin={{ top: 20, right: 10, left: -20, bottom: 10 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis
-                    dataKey="hour"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: "#888" }}
-                    dy={10}
-                  />
-                  <YAxis
-                    domain={[0, 50]}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: "#888" }}
-                    ticks={[0, 10, 20, 30, 40, 50]}
-                    label={{ value: "PM2.5 (µg/m³)", angle: -90, position: "insideLeft", offset: 20, style: { fontSize: '12px', fill: '#888' } }}
-                  />
-                  <ReferenceLine y={25} stroke="#f87171" strokeDasharray="4 4" />
-                  <ReferenceLine y={15} stroke="#22c55e" strokeDasharray="4 4" />
-                  <Line
-                    type="monotone"
-                    dataKey="pm25"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    dot={{ r: 4, fill: "#3b82f6", strokeWidth: 0 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-              <div className="text-center text-xs text-gray-400 mt-2">Hours</div>
+            <div className="grid flex-1 grid-cols-1 gap-6 xl:grid-cols-2">
+              {modelVariants.map((variant) => {
+                const [variantName, ...descriptionParts] = variant.split(" - ");
+
+                return (
+                  <div key={variant} className="min-w-0 rounded-lg border border-gray-200 p-4">
+                    <h4 className="text-sm font-bold text-gray-800">{variantName}</h4>
+                    <p className="mt-1 min-h-10 text-xs leading-relaxed text-gray-500">
+                      {descriptionParts.join(" - ")}
+                    </p>
+                    <ForecastChart data={variantForecastData[variant as keyof typeof variantForecastData]} />
+                  </div>
+                );
+              })}
             </div>
 
             <div className="mt-8 border-t border-gray-100 pt-4">
-              <p className="text-xs text-gray-500 font-medium">Forecast generated: May 9, 2026 at 8:00 AM (PHT)</p>
-              <p className="text-xs text-gray-500 font-medium">24-hour window: May 9, 2026 8:00 AM &rarr; May 10, 2026 8:00 AM</p>
+              <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-gray-500">
+                <span><span className="mr-1 inline-block h-0.5 w-4 bg-blue-500 align-middle"></span>24-hr Forecast</span>
+                <span><span className="mr-1 inline-block w-4 border-b border-dashed border-red-400 align-middle"></span>PH NAAQS (25 µg/m³)</span>
+                <span><span className="mr-1 inline-block w-4 border-b border-dashed border-green-500 align-middle"></span>WHO Guideline (15 µg/m³)</span>
+              </div>
+              <p className="mt-3 text-xs text-gray-500">Forecast generated: May 9, 2026 at 8:00 AM (PHT)</p>
+              <p className="text-xs text-gray-500">24-hour window: May 9, 2026 8:00 AM &rarr; May 10, 2026 8:00 AM</p>
             </div>
           </div>
 
           {/* Side Status Panel */}
-          <div className="bg-[#fffdf2] border border-orange-100 rounded-xl p-6 shadow-sm flex flex-col">
-            <div className="text-center mb-6">
-              <p className="text-sm text-gray-600 mb-6">Manila — Next 24 Hours</p>
+          <div className="bg-[#fffdf2] border border-orange-100 rounded-xl p-4 shadow-sm flex flex-col self-start lg:col-span-1 lg:h-fit">
+            <div className="text-center mb-4">
+              <p className="text-xs text-gray-600 mb-4">Manila — Next 24 Hours</p>
               <div className="flex flex-col items-center justify-center">
-                <div className="bg-yellow-400 text-white rounded-full p-2 mb-3">
-                   <Smile className="w-12 h-12" />
+                <div className="bg-yellow-400 text-white rounded-full p-2 mb-2">
+                   <Smile className="w-10 h-10" />
                 </div>
-                <h2 className="text-2xl font-bold text-yellow-500 tracking-wide mb-3">
+                <h2 className="text-xl font-bold text-yellow-500 tracking-wide mb-2">
                   MODERATE
                 </h2>
-                <div className="bg-yellow-200/50 text-yellow-700 text-sm font-semibold py-1 px-4 rounded-full">
+                <div className="bg-yellow-200/50 text-yellow-700 text-xs font-semibold py-1 px-3 rounded-full">
                   Peak: 28.4 µg/m³
                 </div>
               </div>
             </div>
 
-            <div className="bg-white border border-gray-100 rounded p-3 mb-6 flex items-start gap-2 shadow-sm">
+            <div className="bg-white border border-gray-100 rounded p-2 mb-4 flex items-start gap-2 shadow-sm">
               <AlertTriangle className="w-4 h-4 text-gray-600 shrink-0 mt-0.5" />
               <p className="text-xs text-gray-600">
                 Sensitive groups should limit outdoor activity.
@@ -391,10 +421,10 @@ export default function AirPredPage() {
             </div>
 
             <div>
-              <h4 className="font-bold text-sm text-gray-800 mb-4">
+              <h4 className="font-bold text-xs text-gray-800 mb-3">
                 AQI Legend (PM2.5 µg/m³)
               </h4>
-              <ul className="text-xs space-y-3">
+              <ul className="text-xs space-y-2">
                 <li className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
