@@ -17,6 +17,8 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   ReferenceLine,
+  Legend,
+  Tooltip,
 } from "recharts";
 
 // Mock data for the chart based on the image
@@ -73,11 +75,26 @@ const variantForecastData = {
   })),
 };
 
-function ForecastChart({ data }: { data: typeof forecastData }) {
+const comparisonData = forecastData.map((point, index) => ({
+  hour: point.hour,
+  variantA: variantForecastData[modelVariants[0]][index].pm25,
+  variantB: variantForecastData[modelVariants[1]][index].pm25,
+  variantC: variantForecastData[modelVariants[2]][index].pm25,
+  variantD: variantForecastData[modelVariants[3]][index].pm25,
+}));
+
+const modelDetails = [
+  { label: "Variant A", detail: "Single branch · Unified encoding · Concatenation fusion · Multimodal", color: "bg-blue-500" },
+  { label: "Variant B", detail: "Dual branch · Concatenation fusion · Multimodal", color: "bg-orange-500" },
+  { label: "Variant C (AIRPRED)", detail: "Dual branch · Cross-modal attention fusion · Multimodal", color: "bg-green-600" },
+  { label: "Variant D", detail: "Single branch · PM2.5-only input", color: "bg-purple-500" },
+];
+
+function ForecastChart() {
   return (
-    <div className="h-[300px] min-h-[300px] w-full">
+    <div className="h-[460px] min-h-[460px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 20, right: 10, left: 10, bottom: 10 }}>
+        <LineChart data={comparisonData} margin={{ top: 20, right: 20, left: 10, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
           <XAxis
             dataKey="hour"
@@ -98,12 +115,21 @@ function ForecastChart({ data }: { data: typeof forecastData }) {
           <ReferenceLine y={15} stroke="#22c55e" strokeDasharray="4 4" />
           <Line
             type="monotone"
-            dataKey="pm25"
+            dataKey="variantA"
+            name="Variant A"
             stroke="#3b82f6"
             strokeWidth={2}
             dot={{ r: 4, fill: "#3b82f6", strokeWidth: 0 }}
             activeDot={{ r: 6 }}
           />
+          <Line type="monotone" dataKey="variantB" name="Variant B" stroke="#f97316" strokeWidth={2} dot={{ r: 4, fill: "#f97316", strokeWidth: 0 }} activeDot={{ r: 6 }} />
+          <Line type="monotone" dataKey="variantC" name="Variant C (AIRPRED)" stroke="#16a34a" strokeWidth={2} dot={{ r: 4, fill: "#16a34a", strokeWidth: 0 }} activeDot={{ r: 6 }} />
+          <Line type="monotone" dataKey="variantD" name="Variant D" stroke="#a855f7" strokeWidth={2} dot={{ r: 4, fill: "#a855f7", strokeWidth: 0 }} activeDot={{ r: 6 }} />
+          <Tooltip
+            formatter={(value, name) => [`${value} µg/m³`, name]}
+            contentStyle={{ borderRadius: "8px", borderColor: "#e5e7eb", fontSize: "12px" }}
+          />
+          <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
         </LineChart>
       </ResponsiveContainer>
       <div className="mt-2 text-center text-xs text-gray-400">Hours</div>
@@ -112,105 +138,8 @@ function ForecastChart({ data }: { data: typeof forecastData }) {
 }
 
 export default function AirPredPage() {
-  // State to toggle between the main dashboard and the "How It Works" view
-  const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [selectedCity, setSelectedCity] = useState(cities[0]);
 
-  // ===== "HOW IT WORKS" VIEW =====
-  if (showHowItWorks) {
-    return (
-      <div className="min-h-screen bg-white font-sans text-slate-900 p-8">
-        <div className="max-w-5xl mx-auto">
-          {/* Top Navigation */}
-          <div className="flex items-center justify-between mb-12 relative">
-            {/* Empty div to balance flexbox */}
-            <div className="w-24"></div> 
-            
-            <span className="text-blue-600 font-bold tracking-widest text-sm uppercase">
-              How It Works
-            </span>
-            
-            <button 
-              onClick={() => setShowHowItWorks(false)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-8 rounded-md transition-colors"
-            >
-              Home
-            </button>
-          </div>
-
-          {/* Header Content */}
-          <h1 className="text-4xl font-bold text-gray-900 mb-6">
-            About the AIRPRED Model
-          </h1>
-          <p className="text-lg text-gray-600 mb-12 leading-relaxed">
-            AIRPRED uses a direct multi-step forecasting architecture trained on historical station data, meteorological inputs, and satellite-derived aerosol observations to produce 24-hour PM2.5 predictions for Philippine urban areas.
-          </p>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-            <div className="bg-[#f0f4ff] rounded-xl py-10 px-6 text-center border border-blue-50">
-              <div className="text-blue-600 text-5xl font-bold mb-2">24h</div>
-              <div className="text-slate-500 font-medium">Forecast window</div>
-            </div>
-            
-            <div className="bg-[#f0fdf4] rounded-xl py-10 px-6 text-center border border-green-50">
-              <div className="text-green-500 text-5xl font-bold mb-2">10</div>
-              <div className="text-slate-500 font-medium">Urban stations</div>
-            </div>
-            
-            <div className="bg-[#fffdf0] rounded-xl py-10 px-6 text-center border border-yellow-50">
-              <div className="text-orange-500 text-5xl font-bold mb-2">Hourly</div>
-              <div className="text-slate-500 font-medium">Update frequency</div>
-            </div>
-          </div>
-
-          {/* Numbered Steps */}
-          <div className="space-y-10 max-w-4xl">
-            {/* Step 1 */}
-            <div className="flex gap-6 items-start">
-              <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0 mt-1">
-                1
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Feature extraction</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Meteorological drivers and lagged PM2.5 values are normalized and encoded into a fixed-length input tensor covering a 48-hour lookback window.
-                </p>
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="flex gap-6 items-start">
-              <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0 mt-1">
-                2
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Direct multi-step output</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  The model produces all 24 hourly PM2.5 predictions simultaneously — avoiding error accumulation that plagues recursive single-step approaches.
-                </p>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="flex gap-6 items-start">
-              <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0 mt-1">
-                3
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Post-processing & thresholds</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Raw predictions are bias-corrected and mapped against Philippine NAAQS (25 µg/m³) and WHO (15 µg/m³) guidelines for health-contextualized output.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ===== MAIN DASHBOARD VIEW =====
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-slate-900">
       {/* ===== NAVIGATION ===== */}
@@ -224,8 +153,7 @@ export default function AirPredPage() {
       <section
         className="relative h-[600px] flex flex-col items-center justify-center text-center px-4"
         style={{
-          // Remember to ensure image_c48b35.jpg is in your /public folder!
-          backgroundImage: `linear-gradient(rgba(17, 24, 39, 0.65), rgba(17, 24, 39, 0.65)), url('/image_c48b35.jpg')`,
+          backgroundImage: "linear-gradient(rgba(2, 13, 45, 0.32), rgba(2, 13, 45, 0.48)), url('/airpred-network.svg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -239,9 +167,8 @@ export default function AirPredPage() {
             Explore Live Dashboard
           </button>
           
-          {/* UPDATED: Added onClick handler to trigger the state change */}
           <button 
-            onClick={() => setShowHowItWorks(true)}
+            onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
             className="bg-white hover:bg-gray-100 text-gray-900 font-medium py-3 px-8 rounded-md transition-colors"
           >
             Learn How It Works
@@ -359,9 +286,9 @@ export default function AirPredPage() {
         </div>
 
         {/* Main Dashboard Area */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,4fr)_minmax(220px,1fr)]">
           {/* Chart Section */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col lg:col-span-3">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col">
             <div className="mb-6">
               <h3 className="font-bold text-gray-800">Model Comparison</h3>
               <p className="mt-1 text-xs text-gray-500">
@@ -369,20 +296,22 @@ export default function AirPredPage() {
               </p>
             </div>
 
-            <div className="grid flex-1 grid-cols-1 gap-6 xl:grid-cols-2">
-              {modelVariants.map((variant) => {
-                const [variantName, ...descriptionParts] = variant.split(" - ");
-
-                return (
-                  <div key={variant} className="min-w-0 rounded-lg border border-gray-200 p-4">
-                    <h4 className="text-sm font-bold text-gray-800">{variantName}</h4>
-                    <p className="mt-1 min-h-10 text-xs leading-relaxed text-gray-500">
-                      {descriptionParts.join(" - ")}
-                    </p>
-                    <ForecastChart data={variantForecastData[variant as keyof typeof variantForecastData]} />
+            <div className="rounded-lg border border-gray-200 p-4">
+              <p className="mb-3 text-xs text-gray-500">
+                All four forecasts share the same PM2.5 scale for direct comparison.
+              </p>
+              <div className="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                {modelDetails.map((model) => (
+                  <div key={model.label} className="rounded-md bg-gray-50 px-3 py-2">
+                    <div className="flex items-center gap-2 text-xs font-bold text-gray-800">
+                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${model.color}`} />
+                      {model.label}
+                    </div>
+                    <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{model.detail}</p>
                   </div>
-                );
-              })}
+                ))}
+              </div>
+              <ForecastChart />
             </div>
 
             <div className="mt-8 border-t border-gray-100 pt-4">
@@ -397,7 +326,7 @@ export default function AirPredPage() {
           </div>
 
           {/* Side Status Panel */}
-          <div className="bg-[#fffdf2] border border-orange-100 rounded-xl p-4 shadow-sm flex flex-col self-start lg:col-span-1 lg:h-fit">
+          <div className="bg-[#fffdf2] border border-orange-100 rounded-xl p-4 shadow-sm flex flex-col self-start lg:h-fit">
             <div className="text-center mb-4">
               <p className="text-xs text-gray-600 mb-4">Manila — Next 24 Hours</p>
               <div className="flex flex-col items-center justify-center">
@@ -473,6 +402,57 @@ export default function AirPredPage() {
         </div>
       </section>
 
+      <section id="how-it-works" className="bg-white px-8 py-16 scroll-mt-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-12">
+            <p className="mb-3 text-sm font-bold uppercase tracking-widest text-blue-600">How It Works</p>
+            <h2 className="mb-6 text-4xl font-bold text-gray-900">About the AIRPRED Model</h2>
+            <p className="text-lg leading-relaxed text-gray-600">
+              AIRPRED uses a direct multi-step forecasting architecture trained on historical station data, meteorological inputs, and satellite-derived aerosol observations to produce 24-hour PM2.5 predictions for Philippine urban areas.
+            </p>
+          </div>
+
+          <div className="mb-16 grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="rounded-xl border border-blue-50 bg-[#f0f4ff] px-6 py-10 text-center">
+              <div className="mb-2 text-5xl font-bold text-blue-600">24h</div>
+              <div className="font-medium text-slate-500">Forecast window</div>
+            </div>
+            <div className="rounded-xl border border-green-50 bg-[#f0fdf4] px-6 py-10 text-center">
+              <div className="mb-2 text-5xl font-bold text-green-500">10</div>
+              <div className="font-medium text-slate-500">Urban stations</div>
+            </div>
+            <div className="rounded-xl border border-yellow-50 bg-[#fffdf0] px-6 py-10 text-center">
+              <div className="mb-2 text-5xl font-bold text-orange-500">Hourly</div>
+              <div className="font-medium text-slate-500">Update frequency</div>
+            </div>
+          </div>
+
+          <div className="max-w-4xl space-y-10">
+            <div className="flex items-start gap-6">
+              <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white">1</div>
+              <div>
+                <h3 className="mb-2 text-xl font-bold text-gray-900">Feature extraction</h3>
+                <p className="leading-relaxed text-gray-600">Meteorological drivers and lagged PM2.5 values are normalized and encoded into a fixed-length input tensor covering a 48-hour lookback window.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-6">
+              <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white">2</div>
+              <div>
+                <h3 className="mb-2 text-xl font-bold text-gray-900">Direct multi-step output</h3>
+                <p className="leading-relaxed text-gray-600">The model produces all 24 hourly PM2.5 predictions simultaneously, avoiding error accumulation that plagues recursive single-step approaches.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-6">
+              <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white">3</div>
+              <div>
+                <h3 className="mb-2 text-xl font-bold text-gray-900">Post-processing &amp; thresholds</h3>
+                <p className="leading-relaxed text-gray-600">Raw predictions are bias-corrected and mapped against Philippine NAAQS (25 µg/m³) and WHO (15 µg/m³) guidelines for health-contextualized output.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ===== FOOTER ===== */}
       <footer className="bg-[#111827] text-gray-400 py-12 px-8 text-sm">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
@@ -489,7 +469,7 @@ export default function AirPredPage() {
             <h4 className="text-white font-semibold mb-4">Links</h4>
             <ul className="space-y-2">
               <li><a href="#" className="hover:text-white transition-colors">Home</a></li>
-              <li><a href="#" onClick={(e) => { e.preventDefault(); setShowHowItWorks(true); }} className="hover:text-white transition-colors">About the Model</a></li>
+              <li><a href="#how-it-works" className="hover:text-white transition-colors">About the Model</a></li>
               <li><a href="#" className="hover:text-white transition-colors">Data Methodology</a></li>
             </ul>
           </div>

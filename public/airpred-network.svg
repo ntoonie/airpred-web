@@ -1,0 +1,36 @@
+<svg width="1456" height="768" viewBox="0 0 1456 768" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="background" cx="50%" cy="45%" r="75%">
+      <stop offset="0" stop-color="#12477C"/>
+      <stop offset="0.55" stop-color="#092D5B"/>
+      <stop offset="1" stop-color="#020D2D"/>
+    </radialGradient>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1456" height="768" fill="url(#background)"/>
+  <g stroke="#65B9FF" stroke-opacity="0.58" stroke-width="1.2">
+    <path d="M145 335L338 292L575 207L745 122L899 215L1203 239L1318 402L1113 577L819 680L563 711L451 548L257 602L145 335Z"/>
+    <path d="M145 335L451 548L745 360L899 215L1113 577L745 360L338 292L257 602L563 711L819 680L745 360L1203 239L1318 402L1113 577"/>
+    <path d="M338 292L451 548L575 207L745 360L745 122L899 215L745 360L1203 239"/>
+    <path d="M257 602L563 711L745 360L819 680L1113 577"/>
+    <path d="M145 335L745 360L1318 402"/>
+  </g>
+  <g stroke="#BCE8FF" stroke-opacity="0.8" fill="#1E609A" fill-opacity="0.7">
+    <path d="M108 314L145 291L181 314V356L145 379L108 356V314Z"/>
+    <path d="M304 265L338 244L372 265V304L338 324L304 304V265Z"/>
+    <path d="M541 183L575 162L609 183V222L575 243L541 222V183Z"/>
+    <path d="M711 98L745 77L779 98V137L745 158L711 137V98Z"/>
+    <path d="M711 334L745 313L779 334V373L745 394L711 373V334Z"/>
+    <path d="M865 194L899 173L933 194V233L899 254L865 233V194Z"/>
+    <path d="M1169 218L1203 197L1237 218V257L1203 278L1169 257V218Z"/>
+    <path d="M1284 381L1318 360L1352 381V420L1318 441L1284 420V381Z"/>
+    <path d="M1079 556L1113 535L1147 556V595L1113 616L1079 595V556Z"/>
+    <path d="M785 659L819 638L853 659V698L819 719L785 698V659Z"/>
+    <path d="M529 690L563 669L597 690V729L563 750L529 729V690Z"/>
+    <path d="M223 581L257 560L291 581V620L257 641L223 620V581Z"/>
+    <path d="M711 339L745 318L779 339V378L745 399L711 378V339Z" filter="url(#glow)"/>
+  </g>
+</svg>
