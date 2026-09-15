@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BarChart2,
   CheckCircle2,
@@ -21,24 +21,7 @@ import {
   Tooltip,
 } from "recharts";
 
-// Mock data for the chart based on the image
-const forecastData = [
-  { hour: "Now", pm25: 17 },
-  { hour: "", pm25: 21 },
-  { hour: "", pm25: 24.5 },
-  { hour: "", pm25: 29 },
-  { hour: "6", pm25: 34 },
-  { hour: "", pm25: 38 },
-  { hour: "", pm25: 35 },
-  { hour: "12", pm25: 31 },
-  { hour: "", pm25: 35 },
-  { hour: "", pm25: 30 },
-  { hour: "18", pm25: 24.5 },
-  { hour: "", pm25: 20 },
-  { hour: "", pm25: 16.5 },
-  { hour: "24", pm25: 14.5 },
-];
-
+// Available NCR stations (display labels, matching thesis Table 2's formatting)
 const cities = [
   "Manila",
   "Quezon City",
@@ -52,6 +35,24 @@ const cities = [
   "San Juan City",
 ];
 
+// The training pipeline's raw city labels (config.yaml's data.cities, and
+// therefore demo_inputs.npz's keys on the backend) don't exactly match the
+// display names above -- no "City" suffix, underscores for multi-word names.
+// Map display label -> backend key here at request time, rather than
+// changing either side to match the other.
+const cityApiKey: Record<string, string> = {
+  "Manila": "Manila",
+  "Quezon City": "Quezon_City",
+  "Caloocan": "Caloocan",
+  "Valenzuela": "Valenzuela",
+  "Pasig": "Pasig",
+  "Makati": "Makati",
+  "Mandaluyong City": "Mandaluyong",
+  "Navotas City": "Navotas",
+  "Pasay City": "Pasay",
+  "San Juan City": "San_Juan",
+};
+
 const modelVariants = [
   "Variant A - Single-branch TCN with Unified Encoding and Concatenation Fusion (Multimodal input)",
   "Variant B - Dual-branch TCN with Concatenation Fusion (Multimodal input)",
@@ -59,29 +60,84 @@ const modelVariants = [
   "Variant D - Single-branch TCN with PM2.5-only input",
 ];
 
-const variantForecastData = {
-  [modelVariants[0]]: forecastData,
-  [modelVariants[1]]: forecastData.map((point, index) => ({
-    ...point,
-    pm25: point.pm25 + [0, 1, -1, 1.5, 2, 1, -1.5, 1, 0.5, -1, 1, 0, -0.5, 1][index],
-  })),
-  [modelVariants[2]]: forecastData.map((point, index) => ({
-    ...point,
-    pm25: point.pm25 + [0, -1, 0.5, -1, -1.5, 0, 1, -1, -1.5, 0.5, -1, 0, 0.5, -1][index],
-  })),
-  [modelVariants[3]]: forecastData.map((point, index) => ({
-    ...point,
-    pm25: point.pm25 + [0, 2, 1, 2.5, 3, 2, 1.5, 2, 2.5, 1, 2, 1.5, 1, 2][index],
-  })),
+// Real predictions, computed LIVE by a small FastAPI backend (see
+// airpred-api/) that loads the trained checkpoints and runs model.forward()
+// on every request -- nothing here is precomputed or cached client-side.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+type ChartPoint = {
+  hour: string;
+  variantA: number;
+  variantB: number;
+  variantC: number;
+  variantD: number;
 };
 
-const comparisonData = forecastData.map((point, index) => ({
-  hour: point.hour,
-  variantA: variantForecastData[modelVariants[0]][index].pm25,
-  variantB: variantForecastData[modelVariants[1]][index].pm25,
-  variantC: variantForecastData[modelVariants[2]][index].pm25,
-  variantD: variantForecastData[modelVariants[3]][index].pm25,
-}));
+type PredictResponse = {
+  city: string;
+  computed_live: boolean;
+  variants: {
+    A: { predicted: number[] };
+    B: { predicted: number[] };
+    C: { predicted: number[] };
+    D: { predicted: number[] };
+  };
+};
+
+type AqiCategory = {
+  label: string;
+  icon: "smile" | "warning";
+  iconBg: string;
+  textColor: string;
+  badgeBg: string;
+  badgeText: string;
+  advisory: string;
+};
+
+// Thresholds match the AQI Legend already rendered in the side panel below
+// (EMB-DENR / Philippine NAAQS PM2.5 categories).
+function getAqiCategory(peak: number): AqiCategory {
+  if (peak <= 12) {
+    return {
+      label: "GOOD", icon: "smile", iconBg: "bg-green-500",
+      textColor: "text-green-600", badgeBg: "bg-green-100", badgeText: "text-green-700",
+      advisory: "Air quality is satisfactory for all groups.",
+    };
+  }
+  if (peak <= 35.4) {
+    return {
+      label: "MODERATE", icon: "smile", iconBg: "bg-yellow-400",
+      textColor: "text-yellow-500", badgeBg: "bg-yellow-200/50", badgeText: "text-yellow-700",
+      advisory: "Sensitive groups should limit outdoor activity.",
+    };
+  }
+  if (peak <= 55.4) {
+    return {
+      label: "UNHEALTHY FOR SENSITIVE GROUPS", icon: "warning", iconBg: "bg-orange-400",
+      textColor: "text-orange-500", badgeBg: "bg-orange-100", badgeText: "text-orange-700",
+      advisory: "Sensitive groups should avoid prolonged outdoor exertion.",
+    };
+  }
+  if (peak <= 150.4) {
+    return {
+      label: "UNHEALTHY", icon: "warning", iconBg: "bg-red-500",
+      textColor: "text-red-600", badgeBg: "bg-red-100", badgeText: "text-red-700",
+      advisory: "Everyone should limit prolonged outdoor exertion.",
+    };
+  }
+  if (peak <= 250.4) {
+    return {
+      label: "VERY UNHEALTHY", icon: "warning", iconBg: "bg-purple-500",
+      textColor: "text-purple-600", badgeBg: "bg-purple-100", badgeText: "text-purple-700",
+      advisory: "Everyone should avoid outdoor activity.",
+    };
+  }
+  return {
+    label: "HAZARDOUS", icon: "warning", iconBg: "bg-rose-900",
+    textColor: "text-rose-900", badgeBg: "bg-rose-100", badgeText: "text-rose-800",
+    advisory: "Health warning: everyone should remain indoors.",
+  };
+}
 
 const modelDetails = [
   { label: "Variant A", detail: "Single branch · Unified encoding · Concatenation fusion · Multimodal", color: "bg-blue-500" },
@@ -90,11 +146,11 @@ const modelDetails = [
   { label: "Variant D", detail: "Single branch · PM2.5-only input", color: "bg-purple-500" },
 ];
 
-function ForecastChart() {
+function ForecastChart({ data }: { data: ChartPoint[] }) {
   return (
     <div className="h-[460px] min-h-[460px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={comparisonData} margin={{ top: 20, right: 20, left: 10, bottom: 20 }}>
+        <LineChart data={data} margin={{ top: 20, right: 20, left: 10, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
           <XAxis
             dataKey="hour"
@@ -139,6 +195,54 @@ function ForecastChart() {
 
 export default function AirPredPage() {
   const [selectedCity, setSelectedCity] = useState(cities[0]);
+  const [livePrediction, setLivePrediction] = useState<PredictResponse | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isComputing, setIsComputing] = useState(false);
+  const [respondedAt, setRespondedAt] = useState<Date | null>(null);
+
+  // Re-runs on every city change -- each call is a genuine live forward
+  // pass through all four models on the backend, not a lookup.
+  useEffect(() => {
+    setIsComputing(true);
+    setLoadError(null);
+    fetch(`${API_BASE_URL}/predict?city=${encodeURIComponent(cityApiKey[selectedCity] ?? selectedCity)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`API returned ${res.status}`);
+        return res.json() as Promise<PredictResponse>;
+      })
+      .then((data) => {
+        setLivePrediction(data);
+        setRespondedAt(new Date());
+      })
+      .catch((err: Error) => setLoadError(err.message))
+      .finally(() => setIsComputing(false));
+  }, [selectedCity]);
+
+  const comparisonData: ChartPoint[] = livePrediction
+    ? livePrediction.variants.A.predicted.map((_, i) => ({
+        hour: i === 0 ? "Now" : [5, 11, 17, 23].includes(i) ? String(i + 1) : "",
+        variantA: livePrediction.variants.A.predicted[i],
+        variantB: livePrediction.variants.B.predicted[i],
+        variantC: livePrediction.variants.C.predicted[i],
+        variantD: livePrediction.variants.D.predicted[i],
+      }))
+    : [];
+
+  // The advisory panel is driven by AIRPRED (Variant C) specifically -- the
+  // thesis's proposed system -- not an average across the four variants
+  // being compared in the chart.
+  const peakValue = livePrediction ? Math.max(...livePrediction.variants.C.predicted) : null;
+  const aqi = peakValue !== null ? getAqiCategory(peakValue) : null;
+
+  // NOTE: the backend's demo input windows have no per-window timestamp
+  // attached (test.npz only tracks which city each window belongs to), so
+  // there's no real calendar date to show for "which 24 hours this is."
+  // This timestamp reflects when THIS live computation actually ran.
+  const generatedAtLabel = respondedAt
+    ? respondedAt.toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "medium" })
+    : isComputing
+    ? "Computing..."
+    : "—";
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-slate-900">
@@ -270,16 +374,16 @@ export default function AirPredPage() {
           <div className="bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3">
             <Clock className="text-blue-500 w-5 h-5" />
             <div>
-              <p className="text-xs text-gray-400">Forecast generated:</p>
-              <p className="text-sm font-medium">May 9, 2026 at 8:00 AM (PHT)</p>
+              <p className="text-xs text-gray-400">Live prediction computed:</p>
+              <p className="text-sm font-medium">{generatedAtLabel}</p>
             </div>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3">
             <Calendar className="text-blue-500 w-5 h-5" />
             <div>
-              <p className="text-xs text-gray-400">24-hour window:</p>
+              <p className="text-xs text-gray-400">Forecast window:</p>
               <p className="text-sm font-medium">
-                May 9, 8:00 AM &rarr; May 10, 8:00 AM
+                Most recent held-out test window
               </p>
             </div>
           </div>
@@ -311,7 +415,18 @@ export default function AirPredPage() {
                   </div>
                 ))}
               </div>
-              <ForecastChart />
+              {loadError && (
+                <p className="mb-3 text-xs text-red-500">
+                  Could not reach the live inference API ({loadError}). Check that the
+                  backend is running and NEXT_PUBLIC_API_URL is set correctly.
+                </p>
+              )}
+              {isComputing && !loadError && (
+                <p className="mb-3 text-xs text-blue-500">
+                  Computing live prediction for {selectedCity}...
+                </p>
+              )}
+              <ForecastChart data={comparisonData} />
             </div>
 
             <div className="mt-8 border-t border-gray-100 pt-4">
@@ -320,24 +435,28 @@ export default function AirPredPage() {
                 <span><span className="mr-1 inline-block w-4 border-b border-dashed border-red-400 align-middle"></span>PH NAAQS (25 µg/m³)</span>
                 <span><span className="mr-1 inline-block w-4 border-b border-dashed border-green-500 align-middle"></span>WHO Guideline (15 µg/m³)</span>
               </div>
-              <p className="mt-3 text-xs text-gray-500">Forecast generated: May 9, 2026 at 8:00 AM (PHT)</p>
-              <p className="text-xs text-gray-500">24-hour window: May 9, 2026 8:00 AM &rarr; May 10, 2026 8:00 AM</p>
+              <p className="mt-3 text-xs text-gray-500">Live prediction computed: {generatedAtLabel}</p>
+              <p className="text-xs text-gray-500">Forecast window: most recent held-out test window (per station)</p>
             </div>
           </div>
 
           {/* Side Status Panel */}
           <div className="bg-[#fffdf2] border border-orange-100 rounded-xl p-4 shadow-sm flex flex-col self-start lg:h-fit">
             <div className="text-center mb-4">
-              <p className="text-xs text-gray-600 mb-4">Manila — Next 24 Hours</p>
+              <p className="text-xs text-gray-600 mb-4">{selectedCity} — Next 24 Hours</p>
               <div className="flex flex-col items-center justify-center">
-                <div className="bg-yellow-400 text-white rounded-full p-2 mb-2">
-                   <Smile className="w-10 h-10" />
+                <div className={`${aqi?.iconBg ?? "bg-gray-300"} text-white rounded-full p-2 mb-2`}>
+                  {aqi?.icon === "warning" ? (
+                    <AlertTriangle className="w-10 h-10" />
+                  ) : (
+                    <Smile className="w-10 h-10" />
+                  )}
                 </div>
-                <h2 className="text-xl font-bold text-yellow-500 tracking-wide mb-2">
-                  MODERATE
+                <h2 className={`text-xl font-bold ${aqi?.textColor ?? "text-gray-400"} tracking-wide mb-2`}>
+                  {aqi?.label ?? "LOADING..."}
                 </h2>
-                <div className="bg-yellow-200/50 text-yellow-700 text-xs font-semibold py-1 px-3 rounded-full">
-                  Peak: 28.4 µg/m³
+                <div className={`${aqi?.badgeBg ?? "bg-gray-100"} ${aqi?.badgeText ?? "text-gray-500"} text-xs font-semibold py-1 px-3 rounded-full`}>
+                  Peak: {peakValue !== null ? `${peakValue.toFixed(1)} µg/m³` : "--"}
                 </div>
               </div>
             </div>
@@ -345,7 +464,7 @@ export default function AirPredPage() {
             <div className="bg-white border border-gray-100 rounded p-2 mb-4 flex items-start gap-2 shadow-sm">
               <AlertTriangle className="w-4 h-4 text-gray-600 shrink-0 mt-0.5" />
               <p className="text-xs text-gray-600">
-                Sensitive groups should limit outdoor activity.
+                {aqi?.advisory ?? "Loading advisory..."}
               </p>
             </div>
 
