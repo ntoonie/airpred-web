@@ -160,11 +160,13 @@ function ForecastChart({ data }: { data: ChartPoint[] }) {
             dy={10}
           />
           <YAxis
-            domain={[0, 50]}
+            domain={[
+              (dataMin: number) => Math.max(0, Math.floor(dataMin - 1)),
+              (dataMax: number) => Math.ceil(dataMax + 1),
+            ]}
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 12, fill: "#888" }}
-            ticks={[0, 10, 20, 30, 40, 50]}
             label={{ value: "PM2.5 (µg/m³)", angle: -90, position: "insideLeft", offset: 20, style: { fontSize: "12px", fill: "#888" } }}
           />
           <ReferenceLine y={25} stroke="#f87171" strokeDasharray="4 4" />
